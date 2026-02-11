@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>V1relix Погода [НОВЫЙ ТИП!]</title>
+    <!-- Leaflet (карта) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0c1a2b, #030812);
+            color: #ffffff;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон (звезды/частицы) */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 200%;
+            height: 200%;
+            background-image: radial-gradient(2px 2px at 10px 30px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 90px 140px, #b3e0ff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 160px 80px, #c2e5ff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 240px 200px, #d4f0ff, rgba(0,0,0,0));
+            background-size: 250px 250px;
+            opacity: 0.2;
+            animation: stars 180s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-300px); }
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(8, 20, 36, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 30px 35px;
+            box-shadow: 0 25px 50px -8px rgba(0,0,0,0.6), 0 0 0 1px rgba(120, 200, 255, 0.2) inset;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s;
+        }
+
+        /* ===== ШАПКА ===== */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo i {
+            font-size: 2.5rem;
+            color: #aae0ff;
+            text-shadow: 0 0 20px #0088ff;
+            filter: drop-shadow(0 0 10px #00a6ff);
+        }
+        .logo span {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #e0f0ff, #b0e4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 16px #0066cc40;
+        }
+        .city-datetime {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            background: rgba(0, 30, 50, 0.5);
+            padding: 10px 22px;
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+        }
+        .city {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .city i {
+            color: #ffd966;
+            text-shadow: 0 0 8px #ffb700;
+        }
+        .datetime {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+
+        /* ===== ВКЛАДКИ ===== */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #b0d4e6;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+            border: 1px solid transparent;
+        }
+        .tab-btn i {
+            font-size: 1.1rem;
+        }
+        .tab-btn.active {
+            background: rgba(0, 160, 255, 0.25);
+            color: white;
+            border: 1px solid rgba(0, 200, 255, 0.6);
+            box-shadow: 0 0 20px #00a6ff50;
+        }
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        /* ===== КОНТЕНТ ВКЛАДОК ===== */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== БЛОК ТЕКУЩЕЙ ПОГОДЫ ===== */
+        .current-weather {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(145deg, #102433, #091a28);
+            border-radius: 36px;
+            padding: 28px 38px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 12px 28px -8px black;
+        }
+        .temp-main {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .temp-icon i {
+            font-size: 5rem;
+            filter: drop-shadow(0 8px 16px #0080ff80);
+            color: #ffe28c;
+        }
+        .temp-value {
+            font-size: 5.5rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+        .temp-desc {
+            font-size: 1.7rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px 40px;
+            background: rgba(0,0,0,0.3);
+            padding: 22px 35px;
+            border-radius: 32px;
+            backdrop-filter: blur(6px);
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 1.1rem;
+        }
+
+        /* ===== ПОЧАСОВОЙ ПРОГНОЗ ===== */
+        .hourly-title, .daily-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hourly-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 18px;
+            padding-bottom: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: #0099ff #102b3a;
+        }
+        .hourly-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .hourly-scroll::-webkit-scrollbar-thumb {
+            background: #0099ff;
+            border-radius: 20px;
+        }
+        .hour-card {
+            background: rgba(20, 50, 75, 0.7);
+            backdrop-filter: blur(6px);
+            border-radius: 28px;
+            padding: 20px 16px;
+            min-width: 110px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.2s;
+            box-shadow: 0 6px 14px #00000030;
+        }
+        .hour-card:hover {
+            background: rgba(40, 90, 130, 0.8);
+            transform: translateY(-4px);
+        }
+        .hour-time {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .hour-icon i {
+            font-size: 2rem;
+            margin: 8px 0;
+            color: #ffe07a;
+        }
+        .hour-temp {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .hour-precip {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            color: #a8e4ff;
+        }
+
+        /* ===== ПРОГНОЗ НА НЕДЕЛЮ ===== */
+        .daily-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .daily-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.02);
+            padding: 14px 25px;
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.2s;
+        }
+        .daily-row:hover {
+            background: rgba(60, 120, 180, 0.15);
+            border-color: #3fa0ff40;
+        }
+        .daily-day {
+            font-weight: 600;
+            min-width: 110px;
+        }
+        .daily-icon i {
+            font-size: 1.8rem;
+            width: 48px;
+            color: #ffe28c;
+        }
+        .daily-temp {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .daily-min {
+            opacity: 0.7;
+            margin-left: 10px;
+            font-size: 1.1rem;
+        }
+        .daily-precip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #b3ebff;
+        }
+
+        /* ===== КАРТА ===== */
+        .map-container {
+            margin-top: 20px;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 30px black;
+        }
+        #map {
+            height: 450px;
+            width: 100%;
+            background: #0a1a26;
+        }
+
+        /* ===== АДАПТАЦИЯ ===== */
+        @media (max-width: 800px) {
+            .container { padding: 20px; }
+            .current-weather { flex-direction: column; align-items: flex-start; }
+            .details { width: 100%; }
+            .logo span { font-size: 1.6rem; }
+            .city-datetime { padding: 8px 16px; }
+        }
+        @media (max-width: 500px) {
+            .temp-value { font-size: 4rem; }
+            .daily-row { flex-wrap: wrap; }
+            .tabs .tab-btn { font-size: 1rem; padding: 10px 16px; }
+        }
+
+        .loader {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.8rem;
+            color: #b0ecff;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            opacity: 0.7;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ШАПКА С ЛОГОТИПОМ V1relix -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-cloud-sun-rain"></i>
+                <span>V1relix Погода</span>
+            </div>
+            <div class="city-datetime">
+                <div class="city">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="cityName">Загрузка...</span>
+                </div>
+                <div class="datetime">
+                    <i class="far fa-calendar-alt"></i>
+                    <span id="currentDateTime"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКИ -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="now"><i class="fas fa-sun"></i> Сейчас</button>
+            <button class="tab-btn" data-tab="forecast"><i class="fas fa-calendar-week"></i> Прогноз</button>
+            <button class="tab-btn" data-tab="map"><i class="fas fa-map-marked-alt"></i> Карта</button>
+        </div>
+
+        <!-- КОНТЕНТ ВКЛАДОК -->
+        <div id="tab-now" class="tab-content active">
+            <!-- сюда динамически отрисуется текущая погода и почасовой -->
+        </div>
+        <div id="tab-forecast" class="tab-content">
+            <!-- прогноз на 7 дней и почасовой (дубль? лучше разместить тут дневной + почасовой) -->
+            <div id="forecast-content"></div>
+        </div>
+        <div id="tab-map" class="tab-content">
+            <div class="map-title" style="font-size:1.5rem; margin-bottom:15px;">
+                <i class="fas fa-cloud-rain" style="color: #7ec8ff;"></i> Радар осадков
+            </div>
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Данные: Open-Meteo · RainViewer · обновление каждые 5с
+        </div>
+    </div>
+
+    <!-- Leaflet -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        (function() {
+            "use strict";
+
+            // --- КОНФИГ ---
+            const UPDATE_INTERVAL = 5000; // 5 секунд
+            const COOKIE_NAME = 'v1relix_location';
+            const COOKIE_EXP_DAYS = 7;
+
+            // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+            let lat = 55.7558;
+            let lon = 37.6176;
+            let cityName = 'Москва';
+            let mapInstance = null;
+            let rainLayer = null;
+            let autoUpdateTimer = null;
+
+            // --- ЭЛЕМЕНТЫ DOM ---
+            const citySpan = document.getElementById('cityName');
+            const dateTimeSpan = document.querySelector('#currentDateTime');
+            const tabNow = document.getElementById('tab-now');
+            const tabForecast = document.getElementById('tab-forecast');
+            const forecastContent = document.getElementById('forecast-content');
+
+            // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+
+            // Обновление часов
+            function updateDateTime() {
+                const now = new Date();
+                const options = { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+                dateTimeSpan.textContent = now.toLocaleDateString('ru-RU', options);
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // --- РАБОТА С COOKIES ---
+            function setCookie(name, value, days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+            }
+
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? decodeURIComponent(match[2]) : null;
+            }
+
+            // Сохраняем координаты в куку
+            function saveLocationToCookie(lat, lon, city) {
+                const data = JSON.stringify({ lat, lon, city });
+                setCookie(COOKIE_NAME, data, COOKIE_EXP_DAYS);
+            }
+
+            // Загружаем из куки, возвращаем объект или null
+            function loadLocationFromCookie() {
+                const cookie = getCookie(COOKIE_NAME);
+                if (cookie) {
+                    try {
+                        return JSON.parse(cookie);
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return null;
+            }
+
+            // --- ПОЛУЧЕНИЕ ГЕОЛОКАЦИИ (с приоритетом cookie) ---
+            async function detectLocation() {
+                // сначала проверяем куки
+                const saved = loadLocationFromCookie();
+                if (saved) {
+                    lat = saved.lat;
+                    lon = saved.lon;
+                    cityName = saved.city || 'Ваше местоположение';
+                    citySpan.textContent = cityName;
+                    console.log('Загружено из cookie', lat, lon);
+                    return; // используем сохранённое
+                }
+
+                // иначе запрашиваем геолокацию
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        if (!navigator.geolocation) reject('Геолокация не поддерживается');
+                        navigator.geolocation.getCurrentPosition(resolve, reject, {
+                            enableHighAccuracy: true,
+                            timeout: 7000
+                        });
+                    });
+                    lat = position.coords.latitude;
+                    lon = position.coords.longitude;
+                    cityName = 'Ваше местоположение';
+                    citySpan.textContent = cityName;
+                    // сохраняем в куки
+                    saveLocationToCookie(lat, lon, cityName);
+                } catch (e) {
+                    console.warn('Геолокация не получена, используется Москва', e);
+                    citySpan.textContent = 'Москва';
+                    // сохраняем Москву по умолчанию
+                    saveLocationToCookie(lat, lon, cityName);
+                }
+            }
+
+            // --- ПОЛУЧЕНИЕ ДАННЫХ ПОГОДЫ ИЗ OPEN-METEO ---
+            async function fetchWeatherData() {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m,precipitation,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('Ошибка загрузки погоды');
+                return await resp.json();
+            }
+
+            // --- ПРЕОБРАЗОВАНИЕ WMO КОДА В ИКОНКУ И ОПИСАНИЕ ---
+            function getIconAndDesc(wmoCode, isDay = 1) {
+                if (wmoCode === 0 || wmoCode === 1) return { icon: isDay ? 'fa-sun' : 'fa-moon', desc: 'Ясно' };
+                if (wmoCode === 2) return { icon: isDay ? 'fa-cloud-sun' : 'fa-cloud-moon', desc: 'Переменная облачность' };
+                if (wmoCode === 3) return { icon: 'fa-cloud', desc: 'Облачно' };
+                if (wmoCode === 45 || wmoCode === 48) return { icon: 'fa-smog', desc: 'Туман' };
+                if (wmoCode >= 51 && wmoCode <= 55) return { icon: 'fa-cloud-rain', desc: 'Морось' };
+                if (wmoCode >= 56 && wmoCode <= 57) return { icon: 'fa-cloud-rain', desc: 'Ледяная морось' };
+                if (wmoCode >= 61 && wmoCode <= 65) return { icon: 'fa-cloud-showers-heavy', desc: 'Дождь' };
+                if (wmoCode >= 66 && wmoCode <= 67) return { icon: 'fa-cloud-hail', desc: 'Ледяной дождь' };
+                if (wmoCode >= 71 && wmoCode <= 77) return { icon: 'fa-snowflake', desc: 'Снег' };
+                if (wmoCode >= 80 && wmoCode <= 82) return { icon: 'fa-cloud-showers-heavy', desc: 'Ливень' };
+                if (wmoCode >= 85 && wmoCode <= 86) return { icon: 'fa-snowflake', desc: 'Снегопад' };
+                if (wmoCode >= 95) return { icon: 'fa-cloud-bolt', desc: 'Гроза' };
+                return { icon: 'fa-cloud', desc: 'Разное' };
+            }
+
+            // --- ОТРИСОВКА ТЕКУЩЕЙ ПОГОДЫ (ВКЛАДКА "Сейчас") ---
+            function renderNowTab(data) {
+                const current = data.current_weather;
+                const hourly = data.hourly;
+                const iconData = getIconAndDesc(current.weathercode, 
+                    new Date().getHours() > 6 && new Date().getHours() < 20 ? 1 : 0);
+
+                let html = `
+                    <div class="current-weather">
+                        <div class="temp-main">
+                            <div class="temp-icon"><i class="fas ${iconData.icon}"></i></div>
+                            <div>
+                                <div class="temp-value">${Math.round(current.temperature)}°</div>
+                                <div class="temp-desc">${iconData.desc}</div>
+                            </div>
+                        </div>
+                        <div class="details">
+                            <div class="detail-item"><i class="fas fa-temperature-low"></i> Ощущается: ${Math.round(current.temperature)}°</div>
+                            <div class="detail-item"><i class="fas fa-tint"></i> Влажность: ${hourly.relativehumidity_2m[0] || 0}%</div>
+                            <div class="detail-item"><i class="fas fa-wind"></i> Ветер: ${Math.round(current.windspeed)} км/ч</div>
+                            <div class="detail-item"><i class="fas fa-cloud-rain"></i> Осадки: ${hourly.precipitation[0]?.toFixed(1) || 0} мм</div>
+                        </div>
+                    </div>
+                    <div class="hourly-title"><i class="fas fa-clock"></i> Почасовой прогноз</div>
+                    <div class="hourly-scroll" id="hourlyScrollNow"></div>
+                `;
+                tabNow.innerHTML = html;
+
+                // Почасовой (12 значений)
+                const hourlyScroll = document.getElementById('hourlyScrollNow');
+                const now = new Date();
+                const currentHour = now.getHours();
+                const timeStrings = hourly.time;
+                let startIdx = 0;
+                for (let i = 0; i < timeStrings.length; i++) {
+                    const h = new Date(timeStrings[i]).getHours();
+                    if (h >= currentHour) { startIdx = i; break; }
+                }
+                for (let i = 0; i < 12; i++) {
+                    const idx = startIdx + i;
+                    if (idx >= hourly.time.length) break;
+                    const hourTime = new Date(hourly.time[idx]);
+                    const hourLabel = hourTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    const temp = Math.round(hourly.temperature_2m[idx]);
+                    const precip = hourly.precipitation[idx] || 0;
+                    const wmo = hourly.weathercode[idx];
+                    const icon = getIconAndDesc(wmo, hourTime.getHours() > 6 && hourTime.getHours() < 20 ? 1 : 0);
+                    const card = document.createElement('div');
+                    card.className = 'hour-card';
+                    card.innerHTML = `
+                        <div class="hour-time">${hourLabel}</div>
+                        <div class="hour-icon"><i class="fas ${icon.icon}"></i></div>
+                        <div class="hour-temp">${temp}°</div>
+                        <div class="hour-precip"><i class="fas fa-tint"></i> ${precip.toFixed(1)} мм</div>
+                    `;
+                    hourlyScroll.appendChild(card);
+                }
+            }
+
+            // --- ОТРИСОВКА ПРОГНОЗА (ВКЛАДКА "Прогноз") ---
+            function renderForecastTab(data) {
+                const daily = data.daily;
+                const hourly = data.hourly;
+                // почасовой тоже покажем в прогнозе (начиная с утра следующего дня)
+                let hourlyHtml = `
+                    <div class="hourly-title"><i class="fas fa-clock"></i> Почасовой (ближайшие)</div>
+                    <div class="hourly-scroll" id="hourlyScrollForecast"></div>
+                `;
+                let dailyHtml = `
+                    <div class="daily-title"><i class="fas fa-calendar-week"></i> Прогноз на 7 дней</div>
+                    <div class="daily-list" id="dailyListForecast"></div>
+                `;
+                forecastContent.innerHTML = hourlyHtml + dailyHtml;
+
+                // Почасовой для прогноза (след 12 часов)
+                const hourlyScroll = document.getElementById('hourlyScrollForecast');
+                const now = new Date();
+                const currentHour = now.getHours();
+                const timeStrings = hourly.time;
+                let startIdx = 0;
+                for (let i = 0; i < timeStrings.length; i++) {
+                    const h = new Date(timeStrings[i]).getHours();
+                    if (h >= currentHour) { startIdx = i; break; }
+                }
+                for (let i = 0; i < 12; i++) {
+                    const idx = startIdx + i;
+                    if (idx >= hourly.time.length) break;
+                    const hourTime = new Date(hourly.time[idx]);
+                    const hourLabel = hourTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    const temp = Math.round(hourly.temperature_2m[idx]);
+                    const precip = hourly.precipitation[idx] || 0;
+                    const wmo = hourly.weathercode[idx];
+                    const icon = getIconAndDesc(wmo, hourTime.getHours() > 6 && hourTime.getHours() < 20 ? 1 : 0);
+                    const card = document.createElement('div');
+                    card.className = 'hour-card';
+                    card.innerHTML = `
+                        <div class="hour-time">${hourLabel}</div>
+                        <div class="hour-icon"><i class="fas ${icon.icon}"></i></div>
+                        <div class="hour-temp">${temp}°</div>
+                        <div class="hour-precip"><i class="fas fa-tint"></i> ${precip.toFixed(1)} мм</div>
+                    `;
+                    hourlyScroll.appendChild(card);
+                }
+
+                // Дневной прогноз
+                const dailyList = document.getElementById('dailyListForecast');
+                const daysOfWeek = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+                for (let i = 0; i < daily.time.length; i++) {
+                    const date = new Date(daily.time[i]);
+                    const dayName = daysOfWeek[date.getDay()];
+                    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+                    const minTemp = Math.round(daily.temperature_2m_min[i]);
+                    const precip = daily.precipitation_sum[i] || 0;
+                    const wmo = daily.weathercode[i];
+                    const icon = getIconAndDesc(wmo, 1);
+                    const row = document.createElement('div');
+                    row.className = 'daily-row';
+                    row.innerHTML = `
+                        <span class="daily-day">${dayName}, ${date.getDate()}</span>
+                        <span class="daily-icon"><i class="fas ${icon.icon}"></i></span>
+                        <span class="daily-temp">${maxTemp}°<span class="daily-min">${minTemp}°</span></span>
+                        <span class="daily-precip"><i class="fas fa-tint"></i> ${precip} мм</span>
+                    `;
+                    dailyList.appendChild(row);
+                }
+            }
+
+            // --- КАРТА (ИНИЦИАЛИЗАЦИЯ И ОБНОВЛЕНИЕ СЛОЯ ОСАДКОВ) ---
+            async function initMap(lat, lon) {
+                if (mapInstance) {
+                    mapInstance.remove();
+                }
+                mapInstance = L.map('map').setView([lat, lon], 7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 19,
+                }).addTo(mapInstance);
+                L.marker([lat, lon]).addTo(mapInstance).bindPopup('Вы здесь').openPopup();
+
+                await updateRainLayer(mapInstance);
+            }
+
+            async function updateRainLayer(map) {
+                if (!map) return;
+                // удаляем старый слой осадков, если есть
+                if (window.rainLayer) {
+                    map.removeLayer(window.rainLayer);
+                    window.rainLayer = null;
+                }
+                try {
+                    const rainRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                    const rainData = await rainRes.json();
+                    if (rainData.radar?.past?.length > 0) {
+                        const lastRadar = rainData.radar.past[0];
+                        const timestamp = lastRadar.time;
+                        const rainLayerUrl = `https://tilecache.rainviewer.com/v2/radar/${timestamp}/256/{z}/{x}/{y}/1/1/0.png?palette=1`;
+                        window.rainLayer = L.tileLayer(rainLayerUrl, { opacity: 0.55, maxZoom: 10 }).addTo(map);
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки радара', e);
+                }
+            }
+
+            // --- ПОЛНОЕ ОБНОВЛЕНИЕ ВСЕХ ДАННЫХ ---
+            async function refreshAll() {
+                try {
+                    const weatherData = await fetchWeatherData();
+                    renderNowTab(weatherData);
+                    renderForecastTab(weatherData);
+                    // обновляем карту, если активна вкладка
+                    if (mapInstance) {
+                        await updateRainLayer(mapInstance);
+                    } else {
+                        // инициализируем карту при первом запуске (вкладка карта)
+                        if (document.querySelector('[data-tab="map"]').classList.contains('active')) {
+                            await initMap(lat, lon);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка обновления:', e);
+                }
+            }
+
+            // --- АВТООБНОВЛЕНИЕ ---
+            function startAutoUpdate() {
+                if (autoUpdateTimer) clearInterval(autoUpdateTimer);
+                autoUpdateTimer = setInterval(() => {
+                    refreshAll();
+                }, UPDATE_INTERVAL);
+            }
+
+            // --- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ---
+            function setupTabs() {
+                const tabs = document.querySelectorAll('.tab-btn');
+                tabs.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const tabName = btn.dataset.tab;
+                        // деактивировать все
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(`tab-${tabName}`).classList.add('active');
+
+                        // если выбрана карта и она ещё не инициализирована
+                        if (tabName === 'map' && !mapInstance) {
+                            await initMap(lat, lon);
+                        }
+                    });
+                });
+            }
+
+            // --- ГЛАВНАЯ ФУНКЦИЯ ЗАПУСКА ---
+            (async function main() {
+                await detectLocation(); // определяем координаты (сначала куки)
+                setupTabs();
+                await refreshAll();     // первая загрузка погоды
+                startAutoUpdate();      // автообновление каждые 5 сек
+
+                // если карта ещё не инициализирована, но вкладка "Карта" активна по умолчанию? Нет, активна "Сейчас"
+                // предварительно инициализируем карту в фоне для быстрого открытия
+                initMap(lat, lon).then(() => console.log('Карта готова'));
+            })();
+        })();
+    </script>
+</body>
+</html>
