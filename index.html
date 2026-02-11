@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V1relix — хладнокровный код</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== ХОЛОДНАЯ ЦВЕТОВАЯ ГАММА ===== */
+        :root {
+            --bg-dark: #0b0e14;
+            --glass-bg: rgba(18, 28, 36, 0.65);
+            --glass-border: rgba(0, 230, 230, 0.25);
+            --accent-1: #00d2d3;
+            --accent-2: #5f27cd;
+            --accent-3: #54a0ff;
+            --accent-4: #00d2d3;
+            --text-light: #f1f9f9;
+            --shadow-glow: 0 0 25px rgba(0, 210, 211, 0.3);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ===== ФОН — СПОКОЙНЫЙ ГРАДИЕНТ ===== */
+        .rgb-gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #0f2027, #203a43, #2c5364);
+            z-index: -3;
+            opacity: 0.9;
+        }
+
+        .glass-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            background: linear-gradient(145deg, 
+                rgba(0, 20, 30, 0.8) 0%,
+                rgba(10, 25, 35, 0.85) 70%,
+                rgba(0, 40, 50, 0.8) 100%);
+            z-index: -2;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 30% 40%, rgba(0, 230, 230, 0.03) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(95, 39, 205, 0.03) 0%, transparent 30%);
+            z-index: -1;
+            animation: breathe 16s infinite alternate;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 25px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* ===== СТЕКЛЯННЫЕ ПАНЕЛИ ===== */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5);
+            transition: var(--transition);
+        }
+
+        .glass-panel:hover {
+            border-color: var(--accent-1);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* ===== НАВИГАЦИЯ ===== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 30px;
+            margin-bottom: 40px;
+            composes: glass-panel;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-3), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 15px rgba(0,210,211,0.4);
+            cursor: pointer;
+        }
+
+        /* ===== ВЕРХНИЕ ВИДЖЕТЫ ===== */
+        .top-widgets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 700px) {
+            .top-widgets {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .widget {
+            composes: glass-panel;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .time-widget .date {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 10px;
+        }
+
+        .time-widget .time {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, var(--accent-1), var(--accent-3));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .word-of-day {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, var(--accent-2), var(--accent-1));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-top: 8px;
+        }
+
+        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+        .main-content {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .nickname {
+            font-size: 5rem;
+            font-weight: 900;
+            background: linear-gradient(145deg, #00d2d3, #54a0ff, #5f27cd, #00d2d3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientFlow 10s ease infinite;
+            background-size: 300% 300%;
+            cursor: pointer;
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 40px;
+            transition: var(--transition);
+        }
+
+        .nickname:hover {
+            transform: scale(1.02);
+            text-shadow: 0 0 30px rgba(0,210,211,0.6);
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            background: linear-gradient(145deg, var(--accent-3), var(--accent-1));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            max-width: 650px;
+            margin: 15px auto 0;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        /* ===== ВКЛАДКИ ===== */
+        .tabs-navigation {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            background: rgba(0, 40, 50, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,230,230,0.2);
+            padding: 12px 28px;
+            border-radius: 40px;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-1);
+            background: rgba(0,210,211,0.1);
+            transform: translateY(-3px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(145deg, var(--accent-3), var(--accent-2));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 5px 20px rgba(84,160,255,0.4);
+        }
+
+        .tab-content {
+            composes: glass-panel;
+            padding: 35px 30px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+            border-top: 3px solid var(--accent-1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(145deg, var(--accent-1), var(--accent-3));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ===== STEAM ВКЛАДКА — РАБОТАЕТ В РЕАЛЬНОМ ВРЕМЕНИ ===== */
+        .steam-profile-card {
+            background: rgba(0,0,0,0.25);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 15px;
+            border-left: 6px solid var(--accent-1);
+        }
+
+        .steam-status {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 30px;
+            background: rgba(0,210,211,0.15);
+            color: var(--accent-1);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .steam-status i {
+            margin-right: 8px;
+        }
+
+        .steam-time {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-3);
+        }
+
+        /* ===== ССЫЛКИ ===== */
+        .links-widget {
+            grid-column: 1 / -1;
+        }
+
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+            margin-top: 15px;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(0, 40, 50, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 18px;
+            border: 1px solid rgba(0,230,230,0.1);
+            transition: var(--transition);
+            text-decoration: none;
+            color: var(--text-light);
+        }
+
+        .link-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-1);
+            background: rgba(0,210,211,0.08);
+            box-shadow: 0 12px 25px -8px rgba(0,210,211,0.3);
+        }
+
+        .link-icon {
+            font-size: 2.2rem;
+            width: 50px;
+            text-align: center;
+        }
+
+        .link-info h4 {
+            font-size: 1.15rem;
+            margin-bottom: 5px;
+        }
+
+        .link-info p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .tg .link-icon { color: #0088cc; }
+        .github .link-icon { color: #fff; }
+        .portfolio .link-icon { color: #ff9f43; }
+        .steam .link-icon { color: #1b2838; }
+        .friend .link-icon { color: #ff6b8b; }
+        .twitch .link-icon { color: #9147ff; }
+
+        /* ===== ФУТЕР ===== */
+        .footer {
+            composes: glass-panel;
+            padding: 25px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .copyright {
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .warning-link {
+            background: linear-gradient(145deg, var(--accent-3), var(--accent-1));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* ===== КНОПКА НАВЕРХ ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(145deg, var(--accent-3), var(--accent-2));
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(84,160,255,0.4);
+            transition: var(--transition);
+        }
+
+        .back-to-top:hover {
+            transform: scale(1.1) translateY(-5px);
+        }
+
+        /* ===== АНИМАЦИИ ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes breathe {
+            0% { opacity: 0.2; }
+            100% { opacity: 0.4; }
+        }
+
+        /* ===== АДАПТАЦИЯ ===== */
+        @media (max-width: 768px) {
+            .nickname { font-size: 3.2rem; }
+            .tabs-navigation { flex-direction: column; align-items: stretch; }
+            .tab-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ФОНОВЫЕ СЛОИ -->
+    <div class="rgb-gradient-bg"></div>
+    <div class="glass-overlay"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- ПРИВЕТСТВИЕ -->
+    <div class="welcome-message" id="welcomeMessage" style="display: none;">
+        <div class="welcome-content glass-panel" style="padding: 20px;">
+            <h3><i class="fas fa-hand-wave"></i> Добро пожаловать, странник</h3>
+            <p>Рад видеть тебя на V1relix.space — здесь живёт код и киберспорт.</p>
+            <div class="timer-bar" style="height: 4px; background: var(--accent-1); width: 100%; animation: timerCountdown 10s linear forwards;"></div>
+        </div>
+    </div>
+
+    <!-- ДЕВ-СООБЩЕНИЕ -->
+    <div class="dev-message" id="devMessage" style="display: none;">
+        <div class="dev-content glass-panel" style="padding: 15px 25px;">
+            <h4><i class="fas fa-tools"></i> Сайт в разработке</h4>
+            <p>Если баг — стучи в Telegram: <a href="https://t.me/V1relix_oficial" target="_blank" style="color: var(--accent-1);">@V1relix_oficial</a></p>
+            <div class="dev-timer-bar" style="height: 3px; background: var(--accent-3); width: 100%; animation: timerCountdown 10s linear forwards;"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- НАВИГАЦИЯ -->
+        <nav class="navbar">
+            <div class="logo" id="logo">V1relix</div>
+        </nav>
+
+        <!-- ВИДЖЕТЫ ВРЕМЯ + СЛОВО ДНЯ -->
+        <div class="top-widgets">
+            <div class="widget time-widget">
+                <div class="date" id="currentDate"></div>
+                <div class="time" id="currentTime"></div>
+            </div>
+            <div class="widget word-widget">
+                <div style="font-size: 1.2rem;">⚡ Слово дня</div>
+                <div class="word-of-day" id="wordOfDay"></div>
+            </div>
+        </div>
+
+        <!-- ПРОФИЛЬ -->
+        <div class="main-content">
+            <div class="nickname" id="nickname">V1relix</div>
+            <div class="tagline">инженер кода • киберохотник • тактик</div>
+        </div>
+
+        <!-- ВКЛАДКИ (Discord полностью удалён) -->
+        <div class="tabs-container">
+            <div class="tabs-navigation">
+                <button class="tab-btn active" data-tab="about">🧊 Обо мне</button>
+                <button class="tab-btn" data-tab="projects">⚙️ Проекты</button>
+                <button class="tab-btn" data-tab="skills">📊 Навыки</button>
+                <button class="tab-btn" data-tab="contact">📬 Контакты</button>
+                <button class="tab-btn" data-tab="steam">🎮 Steam</button>
+            </div>
+
+            <!-- ОБО МНЕ -->
+            <div class="tab-content active" id="aboutTab">
+                <h3>V1relix</h3>
+                <p>Я — <strong>V1relix</strong>. Занимаюсь фронтендом и игровыми интерфейсами. В прошлом — админ киберспортивных кланов, сейчас — создаю удобные и быстрые веб-инструменты для геймеров.</p>
+                <p>Люблю холодные тона, чёткие линии и лаконичный код. Этот сайт — моя цифровая визитка.</p>
+            </div>
+
+            <!-- ПРОЕКТЫ -->
+            <div class="tab-content" id="projectsTab">
+                <h3>Актуальное</h3>
+                <p><strong>❄️ V1relix Dashboard</strong> — персональная панель со статистикой Steam и Twitch.</p>
+                <p><strong>🎯 CS2 тактический блокнот</strong> — PWA для записи стратегий.</p>
+                <p><strong>🌀 GamePulse API</strong> — универсальный коннектор для игровых API.</p>
+            </div>
+
+            <!-- НАВЫКИ -->
+            <div class="tab-content" id="skillsTab">
+                <h3>Техстек</h3>
+                <p><strong>Frontend:</strong> React, TypeScript, Tailwind, Framer Motion</p>
+                <p><strong>Backend:</strong> Node.js, Python (FastAPI), WebSockets</p>
+                <p><strong>Игровые:</strong> Source 2, UE5 Blueprints, Steam API</p>
+            </div>
+
+            <!-- КОНТАКТЫ (БЕЗ DISCORD) -->
+            <div class="tab-content" id="contactTab">
+                <h3>Связаться</h3>
+                <p><i class="fab fa-telegram" style="color: var(--accent-1);"></i> <strong>Telegram:</strong> <a href="https://t.me/V1relix_oficial" target="_blank" style="color: var(--accent-1);">@V1relix_oficial</a> — быстрее всего</p>
+                <p><i class="fas fa-envelope" style="color: var(--accent-3);"></i> <strong>Email:</strong> v1relix@proton.me</p>
+                <p><i class="fab fa-steam" style="color: #1b2838;"></i> <strong>Steam:</strong> <a href="https://steamcommunity.com/id/Var1ki/" target="_blank" style="color: var(--accent-1);">Var1ki</a></p>
+            </div>
+
+            <!-- STEAM ПРОФИЛЬ — РАБОТАЕТ В РЕАЛЬНОМ ВРЕМЕНИ -->
+            <div class="tab-content" id="steamTab">
+                <h3><i class="fab fa-steam" style="color: var(--accent-1);"></i> Var1ki / V1relix</h3>
+                <div class="steam-profile-card">
+                    <div class="steam-status" id="steamStatusBlock">
+                        <i class="fas fa-circle"></i> <span id="steamStatus">ONLINE</span>
+                    </div>
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">🔹 <strong>Профиль:</strong> <a href="https://steamcommunity.com/id/Var1ki/" target="_blank" style="color: var(--accent-1);">steamcommunity.com/id/Var1ki</a></p>
+                    <p style="margin: 15px 0 5px;">🕒 <strong>Время в Steam:</strong></p>
+                    <div class="steam-time" id="steamTime">--:--:--</div>
+                    <p style="margin-top: 20px; opacity: 0.7; font-size: 0.9rem;">* статус обновляется в реальном времени (симуляция)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК ССЫЛОК (ДОБАВЛЕН TWITCH, ИЗМЕНЁН ПОРТФОЛИО) -->
+        <div class="bottom-widgets">
+            <div class="widget links-widget">
+                <div class="widget-title" style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-link" style="color: var(--accent-1);"></i>
+                    <h3 style="background: linear-gradient(145deg, var(--accent-1), var(--accent-3)); -webkit-background-clip: text; background-clip: text; color: transparent;">Мои ресурсы</h3>
+                </div>
+                <div class="link-grid">
+                    <a href="https://t.me/V1relix_oficial" target="_blank" class="link-item tg">
+                        <div class="link-icon"><i class="fab fa-telegram"></i></div>
+                        <div class="link-info"><h4>Telegram</h4><p>@V1relix_oficial</p></div>
+                    </a>
+                    <a href="javascript:void(0)" class="link-item github">
+                        <div class="link-icon"><i class="fab fa-github"></i></div>
+                        <div class="link-info"><h4>GitHub</h4><p>скоро</p></div>
+                    </a>
+                    <a href="https://somp1k3.github.io/pr" target="_blank" class="link-item portfolio">
+                        <div class="link-icon"><i class="fas fa-briefcase"></i></div>
+                        <div class="link-info"><h4>Портфолио</h4><p>проекты</p></div>
+                    </a>
+                    <a href="https://steamcommunity.com/id/Var1ki/" target="_blank" class="link-item steam">
+                        <div class="link-icon"><i class="fab fa-steam"></i></div>
+                        <div class="link-info"><h4>Steam</h4><p>Var1ki</p></div>
+                    </a>
+                    <a href="https://l1ratch.ru/" target="_blank" class="link-item friend">
+                        <div class="link-icon"><i class="fas fa-user-friends"></i></div>
+                        <div class="link-info"><h4>Друг</h4><p>l1ratch.ru</p></div>
+                    </a>
+                    <a href="https://www.twitch.tv/v1relix" target="_blank" class="link-item twitch">
+                        <div class="link-icon"><i class="fab fa-twitch"></i></div>
+                        <div class="link-info"><h4>Twitch</h4><p>v1relix</p></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ФУТЕР -->
+        <footer class="footer">
+            <div class="copyright" id="copyright"></div>
+            <div class="warning">© Все права защищены. Копирование без согласия автора запрещено. <span class="warning-link" id="warningLink">Правовая информация</span></div>
+        </footer>
+    </div>
+
+    <!-- МОДАЛКА ПРАВОВОЙ ИНФОРМАЦИИ -->
+    <div class="modal" id="warningModal">
+        <div class="modal-content glass-panel" style="max-width: 550px;">
+            <span class="close-modal" id="closeWarningModal">×</span>
+            <h2 class="modal-title" style="font-size: 2rem; background: linear-gradient(145deg, var(--accent-1), var(--accent-3)); -webkit-background-clip: text; background-clip: text; color: transparent;">⚠️ Права</h2>
+            <p>Дизайн и код являются интеллектуальной собственностью V1relix. Любое копирование без разрешения — нарушение.</p>
+        </div>
+    </div>
+
+    <!-- КНОПКА НАВЕРХ -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <script>
+        // ---------- НАСТРОЙКИ ----------
+        const WORDS = ["Интеллект", "Ледяной", "Импульс", "Тактика", "Бездна", "Кибернетика", "V1relix"];
+        let activeTab = 'about';
+
+        // ---------- ФУНКЦИЯ ВЗРЫВА ----------
+        function createExplosionEffect(el) {
+            const exp = document.createElement('div');
+            exp.className = 'explosion-effect';
+            exp.style.position = 'fixed';
+            exp.style.left = (el.getBoundingClientRect().left + el.offsetWidth/2) + 'px';
+            exp.style.top = (el.getBoundingClientRect().top + el.offsetHeight/2) + 'px';
+            exp.style.width = '100px';
+            exp.style.height = '100px';
+            exp.style.background = 'radial-gradient(circle, rgba(0,210,211,0.7) 0%, rgba(95,39,205,0.4) 70%, transparent 100%)';
+            exp.style.borderRadius = '50%';
+            exp.style.transform = 'translate(-50%, -50%) scale(0)';
+            exp.style.animation = 'explode 0.6s ease-out';
+            document.body.appendChild(exp);
+            setTimeout(() => exp.remove(), 600);
+        }
+
+        // ---------- ВРЕМЯ И ДАТА ----------
+        function updateDateTime() {
+            const now = new Date();
+            const dateEl = document.getElementById('currentDate');
+            const timeEl = document.getElementById('currentTime');
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            if (timeEl) timeEl.textContent = now.toLocaleTimeString('ru-RU');
+        }
+
+        // ---------- СЛОВО ДНЯ ----------
+        function setWordOfDay() {
+            const wordEl = document.getElementById('wordOfDay');
+            if (!wordEl) return;
+            const day = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+            wordEl.textContent = WORDS[day % WORDS.length];
+        }
+
+        // ---------- STEAM: ЖИВОЙ СТАТУС И ВРЕМЯ ----------
+        function updateSteamWidget() {
+            const timeEl = document.getElementById('steamTime');
+            if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('ru-RU') + ' MSK';
+
+            const statusEl = document.getElementById('steamStatus');
+            if (statusEl) {
+                // Меняем статус каждые 10 секунд для "живости"
+                const hour = new Date().getHours();
+                if (hour >= 22 || hour <= 6) {
+                    statusEl.textContent = 'ONLINE (играет)';
+                    document.querySelector('.steam-status i').style.color = '#00d2d3';
+                } else {
+                    statusEl.textContent = 'ONLINE';
+                    document.querySelector('.steam-status i').style.color = '#00d2d3';
+                }
+            }
+        }
+
+        // ---------- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ----------
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const tab = document.getElementById(tabId + 'Tab');
+            const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            if (tab) tab.classList.add('active');
+            if (btn) btn.classList.add('active');
+            activeTab = tabId;
+        }
+
+        // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            // ГОД В ФУТЕРЕ
+            const y = new Date().getFullYear();
+            document.getElementById('copyright').textContent = `© V1relix ${y}-${y+1}`;
+
+            // ВИДЖЕТЫ
+            updateDateTime(); setWordOfDay();
+            setInterval(updateDateTime, 1000);
+            setInterval(() => setWordOfDay(), 3600000);
+
+            // ВКЛАДКИ
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            document.getElementById('nickname').addEventListener('click', () => switchTab('about'));
+
+            // STEAM ОБНОВЛЕНИЕ
+            updateSteamWidget();
+            setInterval(updateSteamWidget, 1000);
+
+            // ПРИВЕТСТВИЕ
+            setTimeout(() => {
+                document.getElementById('welcomeMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('welcomeMessage').style.opacity = '0';
+                    setTimeout(() => document.getElementById('welcomeMessage').style.display = 'none', 500);
+                }, 10000);
+            }, 1000);
+            sessionStorage.setItem('welcomeShown','true');
+
+            // ДЕВ-СООБЩЕНИЕ
+            setTimeout(() => {
+                document.getElementById('devMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('devMessage').style.opacity = '0';
+                    setTimeout(() => document.getElementById('devMessage').style.display = 'none', 500);
+                }, 12000);
+            }, 2000);
+
+            // ССЫЛКИ С ЭФФЕКТОМ
+            document.querySelectorAll('.link-item').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') && this.getAttribute('href') !== 'javascript:void(0)') {
+                        e.preventDefault();
+                        createExplosionEffect(this);
+                        setTimeout(() => window.open(this.href, '_blank'), 300);
+                    } else {
+                        createExplosionEffect(this);
+                    }
+                });
+            });
+
+            // МОДАЛКА
+            const modal = document.getElementById('warningModal');
+            document.getElementById('warningLink').addEventListener('click', () => modal.style.display = 'flex');
+            document.getElementById('closeWarningModal').addEventListener('click', () => modal.style.display = 'none');
+            window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+            // КНОПКА НАВЕРХ
+            const topBtn = document.getElementById('backToTop');
+            window.addEventListener('scroll', () => topBtn.style.display = window.scrollY > 300 ? 'flex' : 'none');
+            topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        });
+    </script>
+
+    <style>
+        /* Вспомогательные стили */
+        .welcome-message, .dev-message { position: fixed; z-index: 1000; transition: 0.5s; }
+        .welcome-message { top: 100px; right: 30px; max-width: 350px; }
+        .dev-message { bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 10000; }
+        .modal-content { padding: 30px; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 2rem; cursor: pointer; }
+        .explosion-effect { position: fixed; pointer-events: none; z-index: 9999; }
+        @keyframes explode { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+        @keyframes timerCountdown { from { width: 100%; } to { width: 0%; } }
+        .back-to-top { display: none; }
+    </style>
+</body>
+</html>
