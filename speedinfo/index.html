@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedInfo™ — точный тест скорости интернета</title>
+    <style>
+        /* Современный дизайн с градиентами и тенями */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f9fafc 0%, #eef1f6 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b;
+        }
+
+        /* Хедер */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2.5rem;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .logo span {
+            font-size: 0.9rem;
+            background: #1e293b;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-left: 0.5rem;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .user-block {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 0.6rem 1.4rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #ff7e5f, #feb47b);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(255,126,95,0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #ff7e5f;
+            color: #ff7e5f;
+        }
+        .btn-outline:hover {
+            background: rgba(255,126,95,0.05);
+            transform: scale(1.02);
+        }
+
+        /* Основной контент */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 2.5rem auto;
+            padding: 0 2rem;
+            width: 100%;
+        }
+
+        /* Карточка спидометра */
+        .speed-card {
+            background: white;
+            border-radius: 40px;
+            padding: 3rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+            backdrop-filter: blur(4px);
+            text-align: center;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .speed-display {
+            font-size: 5.5rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            margin: 0.5rem 0 0.2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .speed-label {
+            color: #64748b;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 500;
+        }
+
+        .test-button {
+            margin: 2.5rem 0 1.5rem;
+        }
+
+        .btn-test {
+            padding: 1rem 3rem;
+            font-size: 1.3rem;
+            background: #1e293b;
+            color: white;
+            border-radius: 60px;
+            box-shadow: 0 15px 30px rgba(30,41,59,0.2);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-test:hover {
+            background: #0f172a;
+            transform: scale(1.02);
+        }
+        .btn-test:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .progress {
+            display: none;
+            width: 80%;
+            margin: 1.5rem auto 0;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            transition: width 0.3s ease;
+        }
+
+        .test-stage {
+            color: #475569;
+            margin-top: 1rem;
+            font-weight: 500;
+            min-height: 1.8rem;
+        }
+
+        /* Сетка информации */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            background: white;
+            border-radius: 32px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .info-item {
+            padding: 0 1rem;
+            border-right: 1px solid #e2e8f0;
+        }
+        .info-item:last-child {
+            border-right: none;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.3px;
+        }
+
+        .info-value {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #0f172a;
+            word-break: break-word;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2.5rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 640px) {
+            .header { padding: 1rem 1.5rem; }
+            .logo h1 { font-size: 1.6rem; }
+            .speed-display { font-size: 3.5rem; }
+            .info-grid { grid-template-columns: 1fr; }
+            .info-item { border-right: none; border-bottom: 1px solid #e2e8f0; padding: 1rem 0; }
+            .info-item:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>SpeedInfo™ <span>бета</span></h1>
+        </div>
+        <div class="user-block" id="userBlock">
+            <!-- Динамически заполняется -->
+        </div>
+    </header>
+
+    <main>
+        <div class="speed-card">
+            <div class="speed-display" id="speedDisplay">—</div>
+            <div class="speed-label">Мбит/с</div>
+
+            <div class="test-button">
+                <button class="btn-test" id="startTestBtn">▶ Начать тест</button>
+            </div>
+
+            <div class="progress" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="test-stage" id="testStage"></div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">IP-адрес</div>
+                <div class="info-value" id="ip">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Браузер</div>
+                <div class="info-value" id="browser">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Операционная система</div>
+                <div class="info-value" id="os">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Регион</div>
+                <div class="info-value" id="region">—</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2025 SpeedInfo™ — точные измерения без рандома
+    </footer>
+
+    <script>
+        (function() {
+            // ==================== СОСТОЯНИЕ ====================
+            let isTesting = false;
+            let user = null;
+
+            // DOM элементы
+            const userBlock = document.getElementById('userBlock');
+            const startBtn = document.getElementById('startTestBtn');
+            const speedDisplay = document.getElementById('speedDisplay');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const testStage = document.getElementById('testStage');
+            const ipEl = document.getElementById('ip');
+            const browserEl = document.getElementById('browser');
+            const osEl = document.getElementById('os');
+            const regionEl = document.getElementById('region');
+
+            // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+            function setProgress(percent) {
+                progressBar.style.width = percent + '%';
+            }
+
+            function getBrowserInfo() {
+                const ua = navigator.userAgent;
+                let browser = 'Неизвестно';
+                let os = 'Неизвестно';
+
+                if (ua.includes('Firefox')) browser = 'Firefox';
+                else if (ua.includes('Chrome')) browser = 'Chrome';
+                else if (ua.includes('Safari')) browser = 'Safari';
+                else if (ua.includes('Edge')) browser = 'Edge';
+                else if (ua.includes('MSIE') || ua.includes('Trident')) browser = 'Internet Explorer';
+
+                if (ua.includes('Windows NT 10.0')) os = 'Windows 10/11';
+                else if (ua.includes('Windows NT 6.1')) os = 'Windows 7';
+                else if (ua.includes('Mac OS X')) os = 'macOS';
+                else if (ua.includes('Linux')) os = 'Linux';
+                else if (ua.includes('Android')) os = 'Android';
+                else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+                return { browser, os };
+            }
+
+            // Загрузка IP и региона через ipapi.co (бесплатно)
+            async function loadIpInfo() {
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    const data = await res.json();
+                    ipEl.textContent = data.ip || '—';
+                    regionEl.textContent = data.city ? `${data.city}, ${data.country_name}` : '—';
+                } catch (e) {
+                    ipEl.textContent = 'Не удалось определить';
+                    regionEl.textContent = '—';
+                }
+            }
+
+            // Загрузка информации о пользователе (авторизация)
+            async function loadUser() {
+                try {
+                    const res = await fetch('/api/user');
+                    if (res.ok) {
+                        user = await res.json();
+                    } else {
+                        user = null;
+                    }
+                } catch (e) {
+                    console.warn('Не удалось загрузить пользователя', e);
+                    user = null;
+                }
+                renderUserBlock();
+            }
+
+            function renderUserBlock() {
+                if (user && user.name) {
+                    userBlock.innerHTML = `
+                        <span style="font-weight:500; color:#1e293b;">${user.name}</span>
+                        <img src="${user.avatar || 'https://ui-avatars.com/api/?name='+user.name}" alt="avatar" class="user-avatar">
+                        <a href="/logout" class="btn btn-outline">Выйти</a>
+                    `;
+                } else {
+                    userBlock.innerHTML = `<a href="/auth/google" class="btn btn-primary">Войти через Google</a>`;
+                }
+            }
+
+            // ==================== ТЕСТ СКОРОСТИ (ЧЕСТНЫЙ) ====================
+            async function runSpeedTest() {
+                if (isTesting) return;
+                isTesting = true;
+                startBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                setProgress(0);
+                testStage.textContent = 'Пинг (задержка)...';
+
+                // --- Пинг (5 попыток) ---
+                const pingSamples = [];
+                for (let i = 0; i < 5; i++) {
+                    const start = performance.now();
+                    try {
+                        await fetch('/api/speedtest/ping', { method: 'HEAD', cache: 'no-store' });
+                        const end = performance.now();
+                        pingSamples.push(end - start);
+                    } catch (e) {
+                        // игнорируем неудачные
+                    }
+                }
+                const validPings = pingSamples.filter(p => p !== undefined);
+                const avgPing = validPings.length ? Math.round(validPings.reduce((a,b) => a + b, 0) / validPings.length) : null;
+
+                setProgress(20);
+                testStage.textContent = 'Загрузка (Download)...';
+
+                // --- Download (10 МБ) ---
+                const downloadSize = 10; // МБ
+                let downloadSpeed = null;
+                try {
+                    const start = performance.now();
+                    const response = await fetch(`/api/speedtest/download?size=${downloadSize}`, { cache: 'no-store' });
+                    const blob = await response.blob();
+                    const end = performance.now();
+                    const durationSec = (end - start) / 1000;
+                    const fileSizeBits = downloadSize * 8; // Мегабиты
+                    downloadSpeed = (fileSizeBits / durationSec).toFixed(2);
+                } catch (e) {
+                    console.warn('Download failed', e);
+                }
+
+                setProgress(60);
+                testStage.textContent = 'Отправка (Upload)...';
+
+                // --- Upload (5 МБ) ---
+                const uploadSize = 5; // МБ
+                let uploadSpeed = null;
+                try {
+                    const data = new Blob([new ArrayBuffer(uploadSize * 1024 * 1024)]);
+                    const formData = new FormData();
+                    formData.append('file', data, 'test.bin');
+                    const start = performance.now();
+                    await fetch('/api/speedtest/upload', { method: 'POST', body: formData });
+                    const end = performance.now();
+                    const durationSec = (end - start) / 1000;
+                    const fileSizeBits = uploadSize * 8;
+                    uploadSpeed = (fileSizeBits / durationSec).toFixed(2);
+                } catch (e) {
+                    console.warn('Upload failed', e);
+                }
+
+                setProgress(100);
+                testStage.textContent = 'Тест завершён!';
+
+                // Показываем download скорость (как основную) или upload если download не удался
+                if (downloadSpeed) {
+                    speedDisplay.textContent = downloadSpeed;
+                } else if (uploadSpeed) {
+                    speedDisplay.textContent = uploadSpeed;
+                } else {
+                    speedDisplay.textContent = 'Ошибка';
+                }
+
+                // Сброс через 2 секунды
+                setTimeout(() => {
+                    isTesting = false;
+                    startBtn.disabled = false;
+                    progressContainer.style.display = 'none';
+                    testStage.textContent = '';
+                    setProgress(0);
+                }, 2000);
+            }
+
+            // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+            window.addEventListener('DOMContentLoaded', () => {
+                const { browser, os } = getBrowserInfo();
+                browserEl.textContent = browser;
+                osEl.textContent = os;
+
+                loadIpInfo();
+                loadUser();
+
+                startBtn.addEventListener('click', runSpeedTest);
+            });
+        })();
+    </script>
+</body>
+</html>
