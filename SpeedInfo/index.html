@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V1relix--SpeedInfo</title>
+    <style>
+        /* Базовые стили (упрощённые, но можно заменить на свои) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            color: #e44d2e;
+        }
+        .user-block {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .btn {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-primary {
+            background: #e44d2e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #c43d1e;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e44d2e;
+            color: #e44d2e;
+        }
+        .btn-outline:hover {
+            background: #ffeae3;
+        }
+        main {
+            flex: 1;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+        }
+        .SpeedInfo™ {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .speed-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #e44d2e;
+            line-height: 1.2;
+            margin: 1rem 0 0.5rem;
+        }
+        .speed-label {
+            color: #666;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .test-button {
+            margin: 2rem 0;
+        }
+        .progress {
+            display: none;
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #e44d2e;
+            transition: width 0.3s;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .info-item {
+            border-right: 1px solid #eee;
+            padding: 0 1rem;
+        }
+        .info-item:last-child {
+            border-right: none;
+        }
+        .info-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .info-value {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>⚡ SpeedInfo™</h1>
+        </div>
+        <div class="user-block" id="userBlock">
+            <!-- Тут будет отображаться информация о пользователе -->
+        </div>
+    </header>
+
+    <main>
+        <div class="speedometer">
+            <div class="speed-display" id="speedDisplay">—</div>
+            <div class="speed-label">текущая скорость (Мбит/с)</div>
+
+            <div class="test-button">
+                <button class="btn btn-primary" id="startTestBtn">Начать тест</button>
+            </div>
+
+            <div class="progress" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div id="testStage" style="color: #666; margin-top: 0.5rem;"></div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">IP-адрес</div>
+                <div class="info-value" id="ip">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Браузер</div>
+                <div class="info-value" id="browser">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Операционная система</div>
+                <div class="info-value" id="os">—</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Регион (по IP)</div>
+                <div class="info-value" id="region">—</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2025 SpeedInfo™ — честный тест скорости от разработчика V1relix 
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
